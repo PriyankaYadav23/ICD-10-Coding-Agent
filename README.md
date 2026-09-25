@@ -92,6 +92,19 @@ python run_tests.py                             # optional: test suite (~15 min,
 
 ---
 
+## Evaluation: 12-note agent test suite (`run_tests.py`)
+
+The suite has 12 notes with known correct codes: GI, knee injury (7-character code + laterality), diabetes, hypertension, bronchitis, left-ankle sprain (laterality), UTI, chest pain, dental caries, and 2 non-clinical inputs where no code should be suggested.
+
+| Version | Expected code found | What changed |
+|---|---|---|
+| v1: prompt rules + code lookup | 9 / 12 | failed on empty answers, a non-existent knee code, and a right-vs-left ankle mix-up |
+| **v2: + description-based `search_codes` tool, duplicate-call blocking, shorter RAG context** | **12 / 12** | knee → S83.241A, left ankle → S93.402A, all other cases correct, both non-clinical inputs → no code |
+
+Stricter view: in **10 / 12** cases the answer contained *only* the expected code. In the other 2, the agent also listed an extra code (a rejected classifier suggestion; "other chest pain" next to "chest pain, unspecified"). The prompt was tightened to list one best code per diagnosis, and the suite now reports this "clean" rate too.
+
+Twelve notes is a small, hand-built suite: it is a regression check, not a benchmark.
+
 ## Known limitations (honest list)
 - Weak labels come from embedding similarity, not human coders, so some training labels are noisy (low-similarity matches were inspected and confirmed).
 - The classifier covers only 232 codes and is weak on short, informal notes (it was trained on long transcriptions). The agent compensates with code search across all 74,719 codes.

@@ -40,6 +40,12 @@ def score(test, report):
     return ("PASS" if hit else "FAIL"), good_codes
 
 
+def extra_codes(test, report):
+    # codes in the answer that do NOT match any expected prefix (stricter, precision-style check)
+    return [c["code"] for c in report["code_checks"]
+            if not any(c["code"].startswith(p) for p in test["expected"])]
+
+
 rows, full_reports = [], []
 for i, test in enumerate(TESTS, start=1):
     print(f"\n[{i}/{len(TESTS)}] {test['name']}")
@@ -52,6 +58,7 @@ for i, test in enumerate(TESTS, start=1):
             "result": result,
             "expected": " / ".join(test["expected"]) or "(no code)",
             "verified_codes_in_answer": " ".join(good_codes),
+            "extra_codes": " ".join(extra_codes(test, report)),
             "problem_codes": " ".join(report["problem_codes"]),
             "classifier_top1": report["classifier_suggestions"][0]["code"] if report["classifier_suggestions"] else "",
             "classifier_top1_conf": report["classifier_suggestions"][0]["confidence"] if report["classifier_suggestions"] else "",
@@ -77,5 +84,6 @@ for i, test in enumerate(TESTS, start=1):
         time.sleep(WAIT_BETWEEN_TESTS)
 
 passed = sum(r["result"] == "PASS" for r in rows)
-print(f"\n===== {passed}/{len(rows)} PASSED =====")
+clean = sum(r["result"] == "PASS" and not r.get("extra_codes") for r in rows)
+print(f"\n===== {passed}/{len(rows)} PASSED (expected code found) | {clean}/{len(rows)} CLEAN (no extra codes) =====")
 print(pd.DataFrame(rows)[["test", "result", "expected", "verified_codes_in_answer", "problem_codes"]].to_string(index=False))
