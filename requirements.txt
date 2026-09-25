@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+torch
+transformers
+sentence-transformers
+scikit-learn
+numpy
+pandas
+groq
+python-dotenv
+streamlit
+requests
+pypdf
