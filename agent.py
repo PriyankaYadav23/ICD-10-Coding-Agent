@@ -15,7 +15,9 @@ from tools import predict_codes, search_coding_guidelines, lookup_code, search_c
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# strip accidental spaces/quotes around the key (a common copy-paste problem in cloud secret boxes)
+GROQ_API_KEY = (os.getenv("GROQ_API_KEY") or "").strip().strip('"').strip("'").strip()
+client = Groq(api_key=GROQ_API_KEY or "missing")
 MODEL = "openai/gpt-oss-20b"
 
 SYSTEM_PROMPT = """You are an ICD-10-CM diagnosis coding assistant. Follow these rules strictly:

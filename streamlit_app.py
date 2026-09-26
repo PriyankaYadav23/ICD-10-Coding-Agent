@@ -33,6 +33,16 @@ st.info("Portfolio demo, not for real clinical or billing use. Runs on free tier
 
 analyze_note = load_agent()
 
+# Safe key check (never shows the key itself): helps debug "Invalid API Key" on the cloud
+import os
+_raw = os.getenv("GROQ_API_KEY") or ""
+with st.sidebar:
+    st.caption("Diagnostics")
+    st.write("Groq key found:", bool(_raw))
+    st.write("Starts with gsk_:", _raw.strip().strip('"').strip("'").startswith("gsk_"))
+    st.write("Length:", len(_raw.strip().strip('"').strip("'").strip()))
+    st.write("Has spaces/quotes around it:", _raw != _raw.strip().strip('"').strip("'"))
+
 choice = st.selectbox("Try a sample note:", list(SAMPLE_NOTES.keys()))
 note = st.text_area("Clinical note:", value=SAMPLE_NOTES[choice], height=140)
 
@@ -44,7 +54,13 @@ if st.button("Analyze", type="primary"):
             try:
                 report = analyze_note(note)
             except Exception as error:
-                st.error("The agent could not finish (possibly the free LLM rate limit). Please try again in a minute.")
+                msg = repr(error)
+                if "401" in msg or "invalid_api_key" in msg:
+                    st.error("LLM authentication failed: the GROQ_API_KEY secret is missing or invalid.")
+                elif "429" in msg or "rate_limit" in msg:
+                    st.error("The free LLM rate limit was reached. Please try again later.")
+                else:
+                    st.error("The agent could not finish. Please try again in a minute.")
                 st.caption(repr(error)[:300])
                 st.stop()
 
