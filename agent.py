@@ -238,7 +238,9 @@ def analyze_note(note):
         answer = ("**No codable diagnosis found in the note.** "
                   "The classifier confidence was very low and no code could be verified from the note text. "
                   "Human review required.")
-    code_checks = verify_codes(answer, codes_from_tools)
+    # Only check the RECOMMENDED part of the answer, not the "Rejected classifier suggestions" section
+    recommended_part = re.split(r"rejected classifier suggestions", answer, flags=re.IGNORECASE)[0]
+    code_checks = verify_codes(recommended_part, codes_from_tools)
     problem_codes = [c["code"] for c in code_checks if not (c["valid"] and c["from_tools"])]
     if problem_codes:
         # Deterministic warning banner: the LLM's claims are not trusted over the Python check

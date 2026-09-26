@@ -17,7 +17,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Folder where this file lives, so paths work no matter where the program is started from
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "biobert_icd_classifier_weighted")
+LOCAL_MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "biobert_icd_classifier_weighted")
+HF_MODEL_REPO = "PriyankaYadav777/biobert-icd10-classifier"   # public copy on the Hugging Face Hub
+
+# Use the local model if it exists (my laptop); otherwise download it from the Hub (cloud deployment).
+# Set FORCE_HUB=1 to test the download path locally.
+if os.path.isdir(LOCAL_MODEL_PATH) and os.getenv("FORCE_HUB") != "1":
+    MODEL_PATH = LOCAL_MODEL_PATH
+else:
+    from huggingface_hub import snapshot_download
+    MODEL_PATH = snapshot_download(HF_MODEL_REPO)
+print("Classifier loaded from:", MODEL_PATH)
 CODES_FILE = os.path.join(BASE_DIR, "data", "icd10cm-codes-2026.txt")
 CHUNKS_FILE = os.path.join(BASE_DIR, "data", "icd_guideline_chunks.json")
 VECTORS_FILE = os.path.join(BASE_DIR, "data", "icd_guideline_vectors.npy")
