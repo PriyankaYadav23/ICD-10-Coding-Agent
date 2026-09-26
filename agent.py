@@ -108,7 +108,9 @@ def call_llm(messages, tool_choice="auto", max_retries=3):
     # One Groq call, retried if the model garbles a tool call (400) or we hit the rate limit (429)
     for attempt in range(max_retries):
         try:
-            response = client.chat.completions.create(
+            # read the key at CALL time (not import time), so a cached/stale client can never be used
+            live_key = (os.getenv("GROQ_API_KEY") or "").strip().strip('"').strip("'").strip()
+            response = Groq(api_key=live_key or "missing").chat.completions.create(
                 model=MODEL, messages=messages, tools=TOOL_DEFINITIONS, tool_choice=tool_choice
             )
             return response.choices[0].message

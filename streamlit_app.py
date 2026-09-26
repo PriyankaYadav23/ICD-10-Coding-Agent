@@ -8,6 +8,15 @@ import streamlit as st
 
 st.set_page_config(page_title="ICD-10 Coding Agent", page_icon="🩺", layout="centered")
 
+# On Streamlit Cloud the key lives in st.secrets. Copy it into the environment BEFORE agent.py is
+# imported, because agent.py reads os.getenv("GROQ_API_KEY"). (Locally, .env is used instead.)
+import os
+try:
+    if "GROQ_API_KEY" in st.secrets:
+        os.environ["GROQ_API_KEY"] = str(st.secrets["GROQ_API_KEY"])
+except Exception:
+    pass   # no secrets file locally -> fine, agent.py falls back to .env
+
 
 @st.cache_resource(show_spinner="Loading models (first start takes ~1-2 minutes)...")
 def load_agent():
@@ -42,6 +51,7 @@ with st.sidebar:
     st.write("Starts with gsk_:", _raw.strip().strip('"').strip("'").startswith("gsk_"))
     st.write("Length:", len(_raw.strip().strip('"').strip("'").strip()))
     st.write("Has spaces/quotes around it:", _raw != _raw.strip().strip('"').strip("'"))
+    st.write("Ends with:", "..." + _raw.strip().strip('"').strip("'").strip()[-4:])
 
 choice = st.selectbox("Try a sample note:", list(SAMPLE_NOTES.keys()))
 note = st.text_area("Clinical note:", value=SAMPLE_NOTES[choice], height=140)
